@@ -91,7 +91,7 @@ Reward:
 * Badge
 * Poin
 
-## ❤avorite Activity
+## Favorite Activity
 
 * Menyimpan aktivitas favorit
 * Melihat kembali aktivitas yang disukai
@@ -223,7 +223,7 @@ git clone https://github.com/Kaizenix/123140169-123140186-MoveIn.git
 
 # Status Project
 
-🚧 Currently in Development — Sprint 1 Planning & Setup
+Currently in Development — Sprint 1 Planning & Setup
 
 ---
 
