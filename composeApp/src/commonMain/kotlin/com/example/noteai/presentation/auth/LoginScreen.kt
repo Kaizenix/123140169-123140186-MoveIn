@@ -20,6 +20,7 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
 
     NoteAITheme(darkTheme = true) {
         MoveInScaffold {
@@ -61,7 +62,10 @@ fun LoginScreen(
 
                     MoveInTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = {
+                            email = it
+                            error = null
+                        },
                         label = "Email atau username",
                         keyboardType = KeyboardType.Email
                     )
@@ -70,19 +74,46 @@ fun LoginScreen(
 
                     MoveInTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = {
+                            password = it
+                            error = null
+                        },
                         label = "Password",
                         isPassword = true
                     )
+
+                    if (error != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = error.orEmpty(),
+                            style = MoveInTheme.typography.labelSmall.copy(
+                                color = MoveInTheme.colors.errorRed
+                            )
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(32.dp))
 
                     MoveInPrimaryButton(
                         text = "Masuk ke MoveIn",
                         onClick = {
-                            val userName = email.substringBefore("@")
-                                .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                            onLoginSuccess(userName)
+                            error = when {
+                                email.isBlank() -> "Email atau username belum diisi."
+                                password.isBlank() -> "Password belum diisi."
+                                password.length < 4 -> "Password minimal 4 karakter."
+                                else -> null
+                            }
+
+                            if (error == null) {
+                                val userName = email
+                                    .substringBefore("@")
+                                    .ifBlank { "Mahasiswa" }
+                                    .replaceFirstChar {
+                                        if (it.isLowerCase()) it.titlecase() else it.toString()
+                                    }
+
+                                onLoginSuccess(userName)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     )

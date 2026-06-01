@@ -1,17 +1,23 @@
 package com.example.noteai.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.noteai.presentation.AppState
 import com.example.noteai.presentation.JourneyLog
-import com.example.noteai.presentation.screens.MainScreen
 import com.example.noteai.presentation.auth.LoginScreen
+import com.example.noteai.presentation.auth.RegisterScreen
+import com.example.noteai.presentation.screens.MainScreen
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
+    object Register : Screen("register")
     object Main : Screen("main")
 }
 
@@ -27,16 +33,41 @@ fun AppNavHost(
     logs: List<JourneyLog>,
     onLogsChange: (List<JourneyLog>) -> Unit
 ) {
+    var currentUserName by rememberSaveable { mutableStateOf("Mahasiswa") }
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route // Bypass login for this prototype conversion demo
+        startDestination = Screen.Login.route
     ) {
         composable(Screen.Login.route) {
             LoginScreen(
-                onNavigateToRegister = { /* Demo only */ },
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route)
+                },
                 onLoginSuccess = { userName ->
+                    currentUserName = userName.ifBlank { "Mahasiswa" }
+
                     navController.navigate(Screen.Main.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.Register.route) {
+            RegisterScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onRegisterSuccess = { userName ->
+                    currentUserName = userName.ifBlank { "Mahasiswa" }
+
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Login.route) {
+                            inclusive = true
+                        }
                     }
                 }
             )
@@ -44,7 +75,7 @@ fun AppNavHost(
 
         composable(Screen.Main.route) {
             MainScreen(
-                userName = "Mahasiswa",
+                userName = currentUserName,
                 isLightMode = isLightMode,
                 onThemeToggle = onThemeToggle,
                 mentalState = appState,
@@ -54,8 +85,12 @@ fun AppNavHost(
                 logs = logs,
                 onLogsChange = onLogsChange,
                 onLogout = {
+                    currentUserName = "Mahasiswa"
+
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Main.route) { inclusive = true }
+                        popUpTo(Screen.Main.route) {
+                            inclusive = true
+                        }
                     }
                 }
             )
