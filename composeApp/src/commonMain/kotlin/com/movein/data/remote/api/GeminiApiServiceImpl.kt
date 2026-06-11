@@ -1,6 +1,6 @@
 package com.movein.data.remote.api
 
-import com.example.noteai.BuildConfig
+import com.example.movein.BuildConfig
 import com.movein.data.remote.dto.GeminiResponseDto
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
