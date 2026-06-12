@@ -40,10 +40,14 @@ val networkModule = module {
 val databaseModule = module {
     single {
         val driverFactory: DatabaseDriverFactory = get()
+        val driver = driverFactory.createDriver()
+
         val clazz = Class.forName("com.example.movein.data.local.NoteDatabase")
-        val constructor = clazz.getConstructor(app.cash.sqldelight.db.SqlDriver::class.java)
-        val instance = constructor.newInstance(driverFactory.createDriver())
-        instance as com.example.movein.data.local.NoteDatabase
+        val factoryField = clazz.getField("Companion")
+        val companionInstance = factoryField.get(null)
+
+        val invokeMethod = companionInstance.javaClass.getMethod("invoke", app.cash.sqldelight.db.SqlDriver::class.java)
+        invokeMethod.invoke(companionInstance, driver)
     }
 }
 
@@ -53,15 +57,28 @@ val preferencesModule = module {
 }
 
 val repositoryModule = module {
-    single<NoteRepository> { NoteRepositoryImpl(get()) }
-    single<AIRepository> { AIRepositoryImpl(get()) }
+    single<NoteRepository> {
+        val driverFactory: DatabaseDriverFactory = get()
+        val driver = driverFactory.createDriver()
+
+        val clazz = Class.forName("com.example.movein.data.local.NoteDatabase")
+        val factoryField = clazz.getField("Companion")
+        val companionInstance = factoryField.get(null)
+        val invokeMethod = companionInstance.javaClass.getMethod("invoke", app.cash.sqldelight.db.SqlDriver::class.java)
+        val dbInstance = invokeMethod.invoke(companionInstance, driver)
+
+        val repoClazz = Class.forName("com.example.movein.data.repository.NoteRepositoryImpl")
+        val constructor = repoClazz.getConstructor(clazz)
+        constructor.newInstance(dbInstance) as NoteRepository
+    }
+    single<AIRepository> { AIRepositoryImpl(geminiService = get()) }
 }
 
 val useCaseModule = module {
-    single { GetAllNotesUseCase(get()) }
-    single { SearchNotesUseCase(get()) }
-    single { SaveNoteUseCase(get()) }
-    single { DeleteNoteUseCase(get()) }
+    single { GetAllNotesUseCase(repository = get()) }
+    single { SearchNotesUseCase(repository = get()) }
+    single { SaveNoteUseCase(repository = get()) }
+    single { DeleteNoteUseCase(repository = get()) }
     single { SummarizeNoteUseCase(get()) }
     single { ImproveWritingUseCase(get()) }
     single { GenerateIdeasUseCase(get()) }
@@ -87,9 +104,18 @@ val viewModelModule = module {
     }
 
     single<AuthViewModel> {
-        AuthViewModel(
-            database = get()
-        )
+        val driverFactory: DatabaseDriverFactory = get()
+        val driver = driverFactory.createDriver()
+
+        val clazz = Class.forName("com.example.movein.data.local.NoteDatabase")
+        val factoryField = clazz.getField("Companion")
+        val companionInstance = factoryField.get(null)
+        val invokeMethod = companionInstance.javaClass.getMethod("invoke", app.cash.sqldelight.db.SqlDriver::class.java)
+        val dbInstance = invokeMethod.invoke(companionInstance, driver)
+
+        val vmClazz = Class.forName("com.example.movein.presentation.auth.AuthViewModel")
+        val constructor = vmClazz.getConstructor(clazz)
+        constructor.newInstance(dbInstance) as AuthViewModel
     }
 
     single<AddNoteViewModel> {
