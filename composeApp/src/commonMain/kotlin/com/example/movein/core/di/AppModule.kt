@@ -24,7 +24,6 @@ import com.example.movein.presentation.screens.detail.NoteDetailViewModel
 import com.example.movein.presentation.screens.home.HomeViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 
@@ -43,7 +42,8 @@ val databaseModule = module {
         val driverFactory: DatabaseDriverFactory = get()
         val clazz = Class.forName("com.example.movein.data.local.NoteDatabase")
         val constructor = clazz.getConstructor(app.cash.sqldelight.db.SqlDriver::class.java)
-        constructor.newInstance(driverFactory.createDriver())
+        val instance = constructor.newInstance(driverFactory.createDriver())
+        instance as com.example.movein.data.local.NoteDatabase
     }
 }
 
@@ -68,11 +68,43 @@ val useCaseModule = module {
 }
 
 val viewModelModule = module {
-    viewModelOf(::HomeViewModel)
-    viewModelOf(::AddNoteViewModel)
-    viewModelOf(::NoteDetailViewModel)
-    viewModelOf(::AIAssistantViewModel)
-    viewModelOf(::AuthViewModel)
+    single<HomeViewModel> {
+        HomeViewModel(
+            getAllNotesUseCase = get(),
+            searchNotesUseCase = get(),
+            deleteNoteUseCase = get(),
+            repository = get()
+        )
+    }
+
+    single<AIAssistantViewModel> {
+        AIAssistantViewModel(
+            aiRepository = get(),
+            summarizeUseCase = get(),
+            improveWritingUseCase = get(),
+            generateIdeasUseCase = get()
+        )
+    }
+
+    single<AuthViewModel> {
+        AuthViewModel(
+            database = get()
+        )
+    }
+
+    single<AddNoteViewModel> {
+        AddNoteViewModel(
+            repository = get(),
+            saveNoteUseCase = get()
+        )
+    }
+
+    single<NoteDetailViewModel> {
+        NoteDetailViewModel(
+            repository = get(),
+            deleteNoteUseCase = get()
+        )
+    }
 }
 
 val sharedModules = listOf(
