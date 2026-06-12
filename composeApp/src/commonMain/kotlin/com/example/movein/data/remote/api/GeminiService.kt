@@ -15,7 +15,11 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-class GeminiService(private val client: HttpClient) {
+// Kita tambahkan parameter apiKey di konstruktor utamanya
+class GeminiService(
+    private val client: HttpClient,
+    private val apiKey: String
+) {
 
     companion object {
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
@@ -60,8 +64,8 @@ class GeminiService(private val client: HttpClient) {
 
         val response: GeminiResponse = client.post("$BASE_URL/models/$MODEL:generateContent") {
             contentType(ContentType.Application.Json)
-            // PERBAIKAN AMAN: Menggunakan BuildConfig proyek untuk mengambil GEMINI_API_KEY
-            parameter("key", com.example.movein.BuildConfig.GEMINI_API_KEY)
+            // SAKTI: Kita gunakan apiKey yang dioper dari konstruktor, bebas dari BuildConfig!
+            parameter("key", apiKey)
             setBody(request)
         }.body()
 
