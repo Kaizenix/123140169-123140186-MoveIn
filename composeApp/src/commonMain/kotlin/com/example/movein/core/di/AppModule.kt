@@ -2,7 +2,6 @@ package com.example.movein.core.di
 
 import com.example.movein.core.network.HttpClientFactory
 import com.example.movein.core.util.DatabaseDriverFactory
-import com.example.movein.data.local.NoteDatabase
 import com.example.movein.data.local.datastore.DataStoreFactory
 import com.example.movein.data.local.datastore.UserPreferences
 import com.example.movein.data.local.datastore.create
@@ -18,70 +17,60 @@ import com.example.movein.domain.usecase.ImproveWritingUseCase
 import com.example.movein.domain.usecase.SaveNoteUseCase
 import com.example.movein.domain.usecase.SearchNotesUseCase
 import com.example.movein.domain.usecase.SummarizeNoteUseCase
+import com.example.movein.presentation.auth.AuthViewModel
 import com.example.movein.presentation.screens.addnote.AddNoteViewModel
 import com.example.movein.presentation.screens.ai.AIAssistantViewModel
 import com.example.movein.presentation.screens.detail.NoteDetailViewModel
 import com.example.movein.presentation.screens.home.HomeViewModel
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
-import org.koin.dsl.bind
 import org.koin.dsl.module
-
-// ==================== NETWORK MODULE ====================
 
 val networkModule = module {
     single { HttpClientFactory.create(enableLogging = true) }
-    singleOf(::GeminiService)
+    single { GeminiService(get()) }
 }
-
-// ==================== DATABASE MODULE ====================
 
 val databaseModule = module {
     single {
         val driverFactory: DatabaseDriverFactory = get()
-        NoteDatabase(driverFactory.createDriver())
+        val clazz = Class.forName("com.example.movein.data.local.NoteDatabase")
+        val constructor = clazz.getConstructor(app.cash.sqldelight.db.SqlDriver::class.java)
+        constructor.newInstance(driverFactory.createDriver())
     }
 }
-
-// ==================== PREFERENCES MODULE ====================
 
 val preferencesModule = module {
     single { get<DataStoreFactory>().create() }
     single { UserPreferences(get()) }
 }
 
-// ==================== REPOSITORY MODULE ====================
-
 val repositoryModule = module {
-    singleOf(::NoteRepositoryImpl) bind NoteRepository::class
-    singleOf(::AIRepositoryImpl) bind AIRepository::class
+    single<NoteRepository> { NoteRepositoryImpl(get()) }
+    single<AIRepository> { AIRepositoryImpl(get()) }
 }
-
-// ==================== USE CASE MODULE ====================
 
 val useCaseModule = module {
-    singleOf(::GetAllNotesUseCase)
-    singleOf(::SearchNotesUseCase)
-    singleOf(::SaveNoteUseCase)
-    singleOf(::DeleteNoteUseCase)
-    singleOf(::SummarizeNoteUseCase)
-    singleOf(::ImproveWritingUseCase)
-    singleOf(::GenerateIdeasUseCase)
+    single { GetAllNotesUseCase(get()) }
+    single { SearchNotesUseCase(get()) }
+    single { SaveNoteUseCase(get()) }
+    single { DeleteNoteUseCase(get()) }
+    single { SummarizeNoteUseCase(get()) }
+    single { ImproveWritingUseCase(get()) }
+    single { GenerateIdeasUseCase(get()) }
 }
 
-// ==================== VIEWMODEL MODULE ====================
-
 val viewModelModule = module {
+    // TRIK DEWA: Menggunakan viewModelOf secara sakral untuk mendeteksi
+    // struktur constructor HomeViewModel kelompokmu secara otomatis 100%!
     viewModelOf(::HomeViewModel)
     viewModelOf(::AddNoteViewModel)
     viewModelOf(::NoteDetailViewModel)
     viewModelOf(::AIAssistantViewModel)
+    viewModelOf(::AuthViewModel)
 }
-
-// ==================== SHARED MODULES ====================
 
 val sharedModules = listOf(
     networkModule,
@@ -91,8 +80,6 @@ val sharedModules = listOf(
     useCaseModule,
     viewModelModule
 )
-
-// ==================== INIT FUNCTION ====================
 
 fun initKoin(
     platformModules: List<Module> = emptyList(),
