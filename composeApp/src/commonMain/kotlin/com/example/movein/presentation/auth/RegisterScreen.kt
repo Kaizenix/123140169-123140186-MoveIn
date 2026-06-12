@@ -15,6 +15,7 @@ import com.example.movein.presentation.theme.NoteAITheme
 
 @Composable
 fun RegisterScreen(
+    viewModel: AuthViewModel,
     onNavigateBack: () -> Unit,
     onRegisterSuccess: (String) -> Unit
 ) {
@@ -22,6 +23,28 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+
+    val registerState by viewModel.registerState
+
+    LaunchedEffect(registerState) {
+        when (registerState) {
+            is RegisterResultState.Success -> {
+                val rawName = (registerState as RegisterResultState.Success).username
+                val userName = rawName
+                    .substringBefore("@")
+                    .ifBlank { "Mahasiswa" }
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+
+                viewModel.resetState()
+                onRegisterSuccess(userName)
+            }
+            is RegisterResultState.Error -> {
+                error = (registerState as RegisterResultState.Error).message
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     NoteAITheme(darkTheme = true) {
         MoveInScaffold {
@@ -99,7 +122,7 @@ fun RegisterScreen(
                     Spacer(modifier = Modifier.height(32.dp))
 
                     MoveInPrimaryButton(
-                        text = "Register dan Mulai",
+                        text = if (registerState is RegisterResultState.Loading) "Mendaftarkan..." else "Register dan Mulai",
                         onClick = {
                             error = when {
                                 name.isBlank() -> "Nama belum diisi."
@@ -109,10 +132,12 @@ fun RegisterScreen(
                             }
 
                             if (error == null) {
-                                onRegisterSuccess(name)
+                                // Menggunakan email sebagai username untuk konsistensi dengan login
+                                viewModel.register(email, password)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = registerState !is RegisterResultState.Loading
                     )
                 }
             }

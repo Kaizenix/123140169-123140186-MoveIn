@@ -61,6 +61,7 @@ fun AppNavHost(
 
         composable(Screen.Register.route) {
             RegisterScreen(
+                viewModel = authViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
