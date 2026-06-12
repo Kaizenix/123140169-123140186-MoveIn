@@ -25,16 +25,23 @@ fun MoveInBottomNav(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .clip(CircleShape)
-            .background(
-                if (isLight) Color.White.copy(alpha = 0.9f) else Color(0xFF181818).copy(alpha = 0.9f)
-            )
-            .padding(horizontal = 8.dp),
+            .height(64.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Background with clip
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(
+                    if (isLight) Color.White.copy(alpha = 0.9f) else Color(0xFF181818).copy(alpha = 0.9f)
+                )
+        )
+
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

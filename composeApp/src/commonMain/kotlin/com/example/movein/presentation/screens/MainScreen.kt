@@ -81,7 +81,8 @@ fun MainScreen(
                     val screenModifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 24.dp)
-                        .padding(bottom = 104.dp)
+                        .navigationBarsPadding()
+                        .padding(bottom = 120.dp)
 
                     Crossfade(targetState = activeTab, animationSpec = tween(500)) { tab ->
                         when (tab) {

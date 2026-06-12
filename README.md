@@ -230,7 +230,7 @@ git clone https://github.com/Kaizenix/123140169-123140186-MoveIn.git
 ## Open Project
 
 * Open project menggunakan Android Studio
-* Sync Gradle
+* Sync Gradlea2
 * Run pada emulator atau device Android
 
 ---
