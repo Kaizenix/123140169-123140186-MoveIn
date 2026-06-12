@@ -30,7 +30,12 @@ import org.koin.dsl.module
 
 val networkModule = module {
     single { HttpClientFactory.create(enableLogging = true) }
-    single { GeminiService(get()) }
+    single {
+        GeminiService(
+            client = get(),
+            apiKey = get()
+        )
+    }
 }
 
 val databaseModule = module {
@@ -63,8 +68,6 @@ val useCaseModule = module {
 }
 
 val viewModelModule = module {
-    // TRIK DEWA: Menggunakan viewModelOf secara sakral untuk mendeteksi
-    // struktur constructor HomeViewModel kelompokmu secara otomatis 100%!
     viewModelOf(::HomeViewModel)
     viewModelOf(::AddNoteViewModel)
     viewModelOf(::NoteDetailViewModel)
